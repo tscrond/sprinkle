@@ -11,9 +11,7 @@ var rootCmd = &cobra.Command{
 	Use:   "sprinkle",
 	Short: "Sprinkle - Proxmox resource provisioning as a CLI",
 	Long:  `Create Promox VMs/LXC containers using Proxmox API`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
+	Run:   func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
@@ -25,8 +23,9 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().String("api-url", "", "api url")
-	rootCmd.PersistentFlags().String("username", "root@pam", "user name example: 'root@pam'")
 
 	rootCmd.AddCommand(pveLogin)
 	rootCmd.AddCommand(testConn)
+
+	rootCmd.AddCommand(createMachine)
 }

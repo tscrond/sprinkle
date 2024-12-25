@@ -10,13 +10,12 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tscrond/sprinkle/lib"
 )
 
 func init() {
-	pveLogin.Flags().Bool("envformat", false, "If flag is set, print Linux-exportable env var format")
-
-	// Add pveLogin command to the root command
-	rootCmd.AddCommand(pveLogin)
+	pveLogin.Flags().Bool("env-format", false, "If flag is set, print Linux-exportable env var format")
+	pveLogin.Flags().String("username", "root@pam", "user name example: 'root@pam'")
 }
 
 var pveLogin = &cobra.Command{
@@ -25,7 +24,7 @@ var pveLogin = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		apiURL, _ := cmd.Flags().GetString("api-url")
 		username, _ := cmd.Flags().GetString("username")
-		envFormat, _ := cmd.Flags().GetBool("envformat")
+		envFormat, _ := cmd.Flags().GetBool("env-format")
 		password := os.Getenv("PVE_PASSWORD")
 
 		if password == "" {
@@ -43,7 +42,7 @@ var pveLogin = &cobra.Command{
 			return
 		}
 
-		resp, err := http.Post(apiURL+"/api2/json/access/ticket", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post("https://"+apiURL+"/api2/json/access/ticket", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Printf("Error making request: %v\n", err)
 			return
@@ -82,43 +81,23 @@ var pveLogin = &cobra.Command{
 
 var testConn = &cobra.Command{
 	Use:   "testconn",
-	Short: "Create a Proxmox resource",
+	Short: "Check connectivity with proxmox node",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Access PersistentFlags
+
 		apiURL, _ := cmd.Flags().GetString("api-url")
-		// csrfToken, _ := cmd.Flags().GetString("csrf-token")
-		// username, _ := cmd.Flags().GetString("username")
-		// ticket, _ := cmd.Flags().GetString("ticket")
-
-		csrfToken := os.Getenv("PVE_CSRFTOKEN")
-		ticket := os.Getenv("PVE_TICKET")
-
-		if csrfToken == "" {
-			fmt.Println("WARNING: POST/DELETE requests will not be possible to fulfill because of no CSRF Token")
-		}
-
-		if ticket == "" {
-			log.Fatalln("cannot complete request - no pve ticket")
-		}
 
 		// Create an HTTP request
-		req, err := http.NewRequest("GET", apiURL+"/api2/json", nil)
+		req, err := http.NewRequest("GET", "https://"+apiURL+"/api2/json", nil)
 		if err != nil {
 			fmt.Printf("Error creating request: %v\n", err)
 			return
 		}
 
-		// Add the PVEAuthCookie to the request
-		req.AddCookie(&http.Cookie{
-			Name:  "PVEAuthCookie",
-			Value: ticket,
-		})
+		client, req, err := lib.ConfigureAuth(&http.Client{}, req)
+		if err != nil {
+			log.Fatalln("Error authenticating with PVE API")
+		}
 
-		// Optionally, add the CSRF token for write operations
-		req.Header.Set("CSRFPreventionToken", csrfToken)
-
-		// Send the request using an HTTP client
-		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error making request: %v\n", err)
