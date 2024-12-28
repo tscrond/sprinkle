@@ -30,6 +30,7 @@ func init() {
 	createCluster.Flags().String("worker-node-tags", fmt.Sprintf("k8s;worker;%s", defaultClusterName), "Tags for worker nodes")
 	createCluster.Flags().String("master-node-tags", fmt.Sprintf("k8s;worker;%s", defaultClusterName), "Tags for master nodes")
 
+	createCluster.Flags().String("ip-range", "", "IP range for the cluster")
 }
 
 var createCluster = &cobra.Command{
@@ -61,6 +62,7 @@ var createCluster = &cobra.Command{
 		masterNodeCores, _ := cmd.Flags().GetInt("master-node-cpus")
 		workerNodeTags, _ := cmd.Flags().GetString("worker-node-tags")
 		masterNodeTags, _ := cmd.Flags().GetString("master-node-tags")
+		ipRange, _ := cmd.Flags().GetString("ip-range")
 
 		// Print the values for debugging (optional)
 		fmt.Printf("Cluster Name: %s\n", clusterName)
@@ -77,7 +79,8 @@ var createCluster = &cobra.Command{
 		fmt.Printf("Network Bridge: %s\n", networkBridge)
 		fmt.Printf("Network Interface: %s\n", networkInterface)
 		fmt.Printf("Default Gateway: %s\n", networkInterface)
-		fmt.Printf("Start On Boot: %b\n", onBoot)
+		fmt.Printf("IP Range: %s\n", ipRange)
+		fmt.Printf("Start On Boot: %t\n", onBoot)
 
 		if preset == "none" {
 			fmt.Printf("Worker Nodes: %d\n", workerNodes)
@@ -139,6 +142,7 @@ var createCluster = &cobra.Command{
 				WorkerNodeCount: workerNodes,
 				MasterNodeCount: masterNodes,
 				ClusterName:     clusterName,
+				IPRange:         ipRange,
 			}
 
 		} else {
@@ -147,6 +151,8 @@ var createCluster = &cobra.Command{
 			if clusterConfig == nil {
 				log.Fatalln("cluster config is undefined")
 			}
+
+			clusterConfig.IPRange = ipRange
 
 			// i hate this
 			clusterConfig.WorkerConfig.MachineType = nodeType

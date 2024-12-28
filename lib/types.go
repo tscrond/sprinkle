@@ -25,4 +25,5 @@ type ClusterConfig struct {
 	MasterNodeCount int
 	WorkerNodeCount int
 	ClusterName     string
+	IPRange         string // like 192.168.1.140-150/24
 }
