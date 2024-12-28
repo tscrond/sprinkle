@@ -16,6 +16,8 @@ func init() {
 	CreateResource.PersistentFlags().String("iso", "ubuntu-22.04.3-live-server-amd64.iso", "ISO for VM")
 	CreateResource.PersistentFlags().Bool("start-on-boot", false, "Start Machine on Boot")
 
+	CreateResource.PersistentFlags().String("config-file", "", "Specify config file to read configuration from")
+
 	CreateResource.AddCommand(createCluster)
 	CreateResource.AddCommand(createMachine)
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -41,7 +42,22 @@ var pveLogin = &cobra.Command{
 			return
 		}
 
-		resp, err := http.Post("https://"+apiURL+"/api2/json/access/ticket", "application/json", bytes.NewBuffer(jsonData))
+		// Create a custom HTTP client with TLS verification disabled
+		httpClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+
+		req, err := http.NewRequest("POST", "https://"+apiURL+"/api2/json/access/ticket", bytes.NewBuffer(jsonData))
+		if err != nil {
+			fmt.Printf("Error creating request: %v\n", err)
+			return
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			fmt.Printf("Error making request: %v\n", err)
 			return
@@ -63,9 +79,14 @@ var pveLogin = &cobra.Command{
 		}
 
 		// Extract token and ticket
-		data := result["data"].(map[string]interface{})
-		csrfToken := data["CSRFPreventionToken"].(string)
-		ticket := data["ticket"].(string)
+		data, ok := result["data"].(map[string]interface{})
+		if !ok {
+			fmt.Println("Error: Invalid response format")
+			return
+		}
+
+		csrfToken, _ := data["CSRFPreventionToken"].(string)
+		ticket, _ := data["ticket"].(string)
 
 		if envFormat {
 			fmt.Println("#!/bin/bash")
