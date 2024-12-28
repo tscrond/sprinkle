@@ -2,35 +2,47 @@ package cmd
 
 import (
 	"fmt"
+	"math/rand/v2"
 
 	"github.com/spf13/cobra"
 	"github.com/tscrond/sprinkle/lib"
 )
 
+var randint = rand.IntN(99999)
+
+var DEFAULT_MACHINE_CONFIG = lib.MachineConfig{
+	Name:             "machine-" + fmt.Sprintf("%d", randint),
+	ID:               randint,
+	MachineType:      "lxc",
+	OsTemplate:       "debian-11-standard_11.7-1_amd64.tar.zst",
+	NetworkBridge:    "vmbr0",
+	NetworkInterface: "eth0",
+	DefaultGateway:   "192.168.1.1",
+	IPAddress:        "192.168.1.150/24",
+	StorageBackend:   "local-lvm",
+	TemplateBackend:  "local",
+	DiskSize:         30,
+	SwapSize:         0,
+	CPUCount:         2,
+	OnBoot:           false,
+	ISO:              "ubuntu-22.04.3-live-server-amd64.iso",
+	Tags:             "",
+}
+
 func init() {
-	createMachine.Flags().String("target-node", "", "Target PVE node name")
-	createMachine.Flags().String("type", "lxc", "Determine type of the machine (lxc or vm)")
+	createMachine.Flags().String("type", DEFAULT_MACHINE_CONFIG.MachineType, "Determine type of the machine (lxc or vm)")
 
-	createMachine.Flags().Bool("start-on-boot", false, "Start Machine on Boot")
+	createMachine.Flags().String("tags", "", "Tags for the machine, if more tags needed, enter with semicolon delimiter (for example: \"tag1;tag2\")")
 
-	createMachine.Flags().Int("id", 200, "LXC container/VM ID")
-	createMachine.Flags().Int("disk-size", 30, "Disk size for container/VM")
-	createMachine.Flags().Int("swap-size", 0, "Swap size for container/VM")
-	createMachine.Flags().Int("cpus", 2, "CPU Cores Count")
-
-	createMachine.Flags().String("os-template", "debian-11-standard_11.7-1_amd64.tar.zst", "Name for the OS template (located in vztmpl in one of the storage systems) (e.g., template.tar.gz)")
-	createMachine.Flags().String("network-bridge", "vmbr0", "Network bridge to use (default: vmbr0)")
-	createMachine.Flags().String("network-interface", "eth0", "Network interface name (default: eth0)")
-	createMachine.Flags().String("default-gateway", "192.168.1.1", "Default gateway for the container (default: 192.168.1.1)")
-	createMachine.Flags().String("ip-address", "192.168.1.150/24", "Static IP address for the container (default: 192.168.1.150)")
-	createMachine.Flags().String("storage-backend", "local-lvm", "Storage backend to use (example: local, local-lvm, ceph etc.)")
-	createMachine.Flags().String("name", "default", "Name for the machine")
-	createMachine.Flags().String("iso", "ubuntu-22.04.3-live-server-amd64.iso", "ISO for VM")
+	createMachine.Flags().Int("id", DEFAULT_MACHINE_CONFIG.ID, "LXC container/VM ID")                     //cluster-predefined (random)
+	createMachine.Flags().Int("disk-size", DEFAULT_MACHINE_CONFIG.DiskSize, "Disk size for container/VM") //
+	createMachine.Flags().Int("swap-size", DEFAULT_MACHINE_CONFIG.SwapSize, "Swap size for container/VM")
+	createMachine.Flags().Int("cpus", DEFAULT_MACHINE_CONFIG.CPUCount, "CPU Cores Count")
 
 }
 
 var createMachine = &cobra.Command{
-	Use:   "create",
+	Use:   "machine",
 	Short: "Create a new LXC container/Virtual Machine",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -51,6 +63,8 @@ var createMachine = &cobra.Command{
 		storageBackend, _ := cmd.Flags().GetString("storage-backend")
 		machineName, _ := cmd.Flags().GetString("name")
 		iso, _ := cmd.Flags().GetString("iso")
+		tags, _ := cmd.Flags().GetString("tags")
+		templateBackend, _ := cmd.Flags().GetString("template-backend")
 
 		// Debug print for flag values
 		fmt.Printf("Machine ID: %d\n", id)
@@ -64,11 +78,15 @@ var createMachine = &cobra.Command{
 		fmt.Printf("Start on Boot: %t\n", startOnBoot)
 		fmt.Printf("CPU Count: %d\n", cpuCount)
 		fmt.Printf("Storage Backend: %s\n", storageBackend)
+		fmt.Printf("Template Backend: %s\n", templateBackend)
 		fmt.Printf("ISO: %s\n", iso)
+		fmt.Printf("Tags: %s\n", tags)
 
 		machineConfig := lib.MachineConfig{
 			ID:               id,
+			MachineType:      machineType,
 			OsTemplate:       osTemplate,
+			TemplateBackend:  templateBackend,
 			NetworkBridge:    networkBridge,
 			NetworkInterface: networkInterface,
 			DefaultGateway:   defaultGateway,
@@ -79,9 +97,10 @@ var createMachine = &cobra.Command{
 			StorageBackend:   storageBackend,
 			Name:             machineName,
 			ISO:              iso,
+			Tags:             tags,
 		}
 
-		result, err := lib.CreateMachine(machineType, apiNode, targetNode, machineConfig)
+		result, err := lib.CreateMachine(apiNode, targetNode, machineConfig)
 		if err != nil {
 			fmt.Println("Errors: ", err)
 		}

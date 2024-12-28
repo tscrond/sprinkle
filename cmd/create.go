@@ -1,0 +1,29 @@
+package cmd
+
+import "github.com/spf13/cobra"
+
+func init() {
+
+	createResource.PersistentFlags().String("target-node", "", "Target PVE node name")
+	createResource.PersistentFlags().String("type", "lxc", "Node type (lxc or vm)")
+
+	createResource.PersistentFlags().String("os-template", "debian-11-standard_11.7-1_amd64.tar.zst", "Name for the OS template located in vztmpl in one of the storage systems (example: debian-11-standard_11.7-1_amd64.tar.zst, template.tar.gz)")
+	createResource.PersistentFlags().String("network-bridge", "vmbr0", "Network bridge to use")
+	createResource.PersistentFlags().String("network-interface", "eth0", "Network interface name")
+	createResource.PersistentFlags().String("default-gateway", "192.168.1.1", "Default gateway for the container/VM")
+	createResource.PersistentFlags().String("storage-backend", "local-lvm", "Storage backend to use for machine disks (example: local, local-lvm, ceph etc.)")
+	createResource.PersistentFlags().String("template-backend", "local", "Storage backend to use for ISO/OS Templates (example: local, local-lvm, ceph etc.)")
+	createResource.PersistentFlags().String("iso", "ubuntu-22.04.3-live-server-amd64.iso", "ISO for VM")
+	createResource.PersistentFlags().Bool("start-on-boot", false, "Start Machine on Boot")
+
+	createResource.AddCommand(createCluster)
+	createResource.AddCommand(createMachine)
+}
+
+var createResource = &cobra.Command{
+	Use:   "create",
+	Short: "Create a resource (cluster or machine)",
+	Run: func(cmd *cobra.Command, args []string) {
+
+	},
+}

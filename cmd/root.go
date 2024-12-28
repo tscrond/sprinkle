@@ -22,10 +22,10 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().String("api-url", "", "api url")
+	rootCmd.PersistentFlags().String("api-url", "", "Proxmox API address (example: proxmox.example.com)")
 
 	rootCmd.AddCommand(pveLogin)
 	rootCmd.AddCommand(testConn)
 
-	rootCmd.AddCommand(createMachine)
+	rootCmd.AddCommand(createResource)
 }
