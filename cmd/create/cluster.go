@@ -27,6 +27,9 @@ func init() {
 	createCluster.Flags().Int("worker-node-cpus", 1, "Core count for worker node")
 	createCluster.Flags().Int("master-node-cpus", 2, "Core count for master node")
 
+	createCluster.Flags().Int("worker-node-memory", 2048, "Memory for worker node")
+	createCluster.Flags().Int("master-node-memory", 2048, "Memory count for master node")
+
 	createCluster.Flags().String("worker-node-tags", fmt.Sprintf("k8s;worker;%s", defaultClusterName), "Tags for worker nodes")
 	createCluster.Flags().String("master-node-tags", fmt.Sprintf("k8s;worker;%s", defaultClusterName), "Tags for master nodes")
 
@@ -60,9 +63,12 @@ var createCluster = &cobra.Command{
 		masterNodeDisk, _ := cmd.Flags().GetInt("master-node-disk")
 		workerNodeCores, _ := cmd.Flags().GetInt("worker-node-cpus")
 		masterNodeCores, _ := cmd.Flags().GetInt("master-node-cpus")
+		workerNodeMemory, _ := cmd.Flags().GetInt("worker-node-memory")
+		masterNodeMemory, _ := cmd.Flags().GetInt("master-node-memory")
 		workerNodeTags, _ := cmd.Flags().GetString("worker-node-tags")
 		masterNodeTags, _ := cmd.Flags().GetString("master-node-tags")
 		ipRange, _ := cmd.Flags().GetString("ip-range")
+		sshKeys, _ := cmd.Flags().GetStringSlice("ssh-pubkey-file")
 
 		// Print the values for debugging (optional)
 		fmt.Printf("Cluster Name: %s\n", clusterName)
@@ -81,6 +87,7 @@ var createCluster = &cobra.Command{
 		fmt.Printf("Default Gateway: %s\n", networkInterface)
 		fmt.Printf("IP Range: %s\n", ipRange)
 		fmt.Printf("Start On Boot: %t\n", onBoot)
+		fmt.Printf("SSH Key files to read: %s\n", sshKeys)
 
 		if preset == "none" {
 			fmt.Printf("Worker Nodes: %d\n", workerNodes)
@@ -89,6 +96,8 @@ var createCluster = &cobra.Command{
 			fmt.Printf("Master Node Disk: %dGB\n", masterNodeDisk)
 			fmt.Printf("Worker Node Cores: %d\n", workerNodeCores)
 			fmt.Printf("Master Node Cores: %d\n", masterNodeCores)
+			fmt.Printf("Worker Node Memory: %d\n", workerNodeMemory)
+			fmt.Printf("Master Node Memory: %d\n", masterNodeMemory)
 		}
 
 		workerNodeConfig := lib.MachineConfig{}
@@ -112,9 +121,11 @@ var createCluster = &cobra.Command{
 				DiskSize:        workerNodeDisk,
 				SwapSize:        0,
 				CPUCount:        workerNodeCores,
+				Memory:          workerNodeMemory,
 				OnBoot:          onBoot,
 				ISO:             nodeISO,
 				Tags:            workerNodeTags + fmt.Sprintf(";%s", clusterName),
+				SshKeys:         sshKeys,
 			}
 
 			masterNodeConfig = lib.MachineConfig{
@@ -129,11 +140,13 @@ var createCluster = &cobra.Command{
 				StorageBackend:  storageBackend,
 				TemplateBackend: templateBackend,
 				DiskSize:        masterNodeDisk,
+				Memory:          masterNodeMemory,
 				SwapSize:        0,
 				CPUCount:        masterNodeCores,
 				OnBoot:          onBoot,
 				ISO:             nodeISO,
 				Tags:            masterNodeTags + fmt.Sprintf(";%s", clusterName),
+				SshKeys:         sshKeys,
 			}
 
 			clusterConfig = &lib.ClusterConfig{
@@ -147,7 +160,7 @@ var createCluster = &cobra.Command{
 
 		} else {
 
-			clusterConfig = returnNodeConfigFromPreset(clusterName, preset)
+			clusterConfig = returnClusterConfigFromPreset(clusterName, preset)
 			if clusterConfig == nil {
 				log.Fatalln("cluster config is undefined")
 			}
@@ -164,6 +177,7 @@ var createCluster = &cobra.Command{
 			clusterConfig.WorkerConfig.TemplateBackend = templateBackend
 			clusterConfig.WorkerConfig.ISO = nodeISO
 			clusterConfig.WorkerConfig.OnBoot = onBoot
+			clusterConfig.WorkerConfig.SshKeys = sshKeys
 
 			// what the fuck
 			clusterConfig.MasterConfig.MachineType = nodeType
@@ -175,6 +189,7 @@ var createCluster = &cobra.Command{
 			clusterConfig.MasterConfig.TemplateBackend = templateBackend
 			clusterConfig.MasterConfig.ISO = nodeISO
 			clusterConfig.MasterConfig.OnBoot = onBoot
+			clusterConfig.MasterConfig.SshKeys = sshKeys
 
 			fmt.Printf("Worker Nodes: %d\n", clusterConfig.WorkerNodeCount)
 			fmt.Printf("Master Nodes: %d\n", clusterConfig.MasterNodeCount)
@@ -182,6 +197,8 @@ var createCluster = &cobra.Command{
 			fmt.Printf("Master Node Disk: %dGB\n", clusterConfig.MasterConfig.DiskSize)
 			fmt.Printf("Worker Node Cores: %d\n", clusterConfig.WorkerConfig.CPUCount)
 			fmt.Printf("Master Node Cores: %d\n", clusterConfig.MasterConfig.CPUCount)
+			fmt.Printf("Worker Node Memory: %d\n", clusterConfig.WorkerConfig.Memory)
+			fmt.Printf("Master Node Memory: %d\n", clusterConfig.MasterConfig.Memory)
 		}
 
 		_, err := lib.CreateCluster(apiNode, targetNode, *clusterConfig)
@@ -191,7 +208,7 @@ var createCluster = &cobra.Command{
 	},
 }
 
-func returnNodeConfigFromPreset(clusterName, preset string) *lib.ClusterConfig {
+func returnClusterConfigFromPreset(clusterName, preset string) *lib.ClusterConfig {
 	switch preset {
 	case "small":
 		fmt.Println("Small preset")

@@ -33,12 +33,13 @@ func init() {
 	createMachine.Flags().String("type", DEFAULT_MACHINE_CONFIG.MachineType, "Determine type of the machine (lxc or vm)")
 
 	createMachine.Flags().String("tags", "", "Tags for the machine, if more tags needed, enter with semicolon delimiter (for example: \"tag1;tag2\")")
+	createMachine.Flags().String("ip-address", DEFAULT_MACHINE_CONFIG.IPAddress, "IP Address (lxc container)")
 
 	createMachine.Flags().Int("id", DEFAULT_MACHINE_CONFIG.ID, "LXC container/VM ID")                     //cluster-predefined (random)
 	createMachine.Flags().Int("disk-size", DEFAULT_MACHINE_CONFIG.DiskSize, "Disk size for container/VM") //
 	createMachine.Flags().Int("swap-size", DEFAULT_MACHINE_CONFIG.SwapSize, "Swap size for container/VM")
 	createMachine.Flags().Int("cpus", DEFAULT_MACHINE_CONFIG.CPUCount, "CPU Cores Count")
-
+	createMachine.Flags().Int("memory", DEFAULT_MACHINE_CONFIG.Memory, "Memory in MB")
 }
 
 var createMachine = &cobra.Command{
@@ -60,13 +61,16 @@ var createMachine = &cobra.Command{
 		swapSize, _ := cmd.Flags().GetInt("swap-size")
 		startOnBoot, _ := cmd.Flags().GetBool("start-on-boot")
 		cpuCount, _ := cmd.Flags().GetInt("cpus")
+		machineMemory, _ := cmd.Flags().GetInt("memory")
 		storageBackend, _ := cmd.Flags().GetString("storage-backend")
-		machineName, _ := cmd.Flags().GetString("name")
+		machineName, _ := cmd.Flags().GetString("machine-name")
 		iso, _ := cmd.Flags().GetString("iso")
 		tags, _ := cmd.Flags().GetString("tags")
 		templateBackend, _ := cmd.Flags().GetString("template-backend")
+		sshKeys, _ := cmd.Flags().GetStringSlice("ssh-pubkey-path")
 
 		// Debug print for flag values
+		fmt.Printf("Machine Name: %s\n", machineName)
 		fmt.Printf("Machine ID: %d\n", id)
 		fmt.Printf("OS Template: %s\n", osTemplate)
 		fmt.Printf("Network Bridge: %s\n", networkBridge)
@@ -77,10 +81,12 @@ var createMachine = &cobra.Command{
 		fmt.Printf("Swap Size: %d\n", swapSize)
 		fmt.Printf("Start on Boot: %t\n", startOnBoot)
 		fmt.Printf("CPU Count: %d\n", cpuCount)
+		fmt.Printf("Memory: %d\n", machineMemory)
 		fmt.Printf("Storage Backend: %s\n", storageBackend)
 		fmt.Printf("Template Backend: %s\n", templateBackend)
 		fmt.Printf("ISO: %s\n", iso)
 		fmt.Printf("Tags: %s\n", tags)
+		fmt.Printf("SSH Key: %s\n", sshKeys)
 
 		machineConfig := lib.MachineConfig{
 			ID:               id,
@@ -94,10 +100,12 @@ var createMachine = &cobra.Command{
 			DiskSize:         diskSize,
 			OnBoot:           startOnBoot,
 			CPUCount:         cpuCount,
+			Memory:           machineMemory,
 			StorageBackend:   storageBackend,
 			Name:             machineName,
 			ISO:              iso,
 			Tags:             tags,
+			SshKeys:          sshKeys,
 		}
 
 		result, err := lib.CreateMachine(apiNode, targetNode, machineConfig)

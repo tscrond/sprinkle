@@ -14,9 +14,11 @@ type MachineConfig struct {
 	DiskSize         int
 	SwapSize         int
 	CPUCount         int
+	Memory           int
 	OnBoot           bool
 	ISO              string
 	Tags             string
+	SshKeys          []string
 }
 
 type ClusterConfig struct {

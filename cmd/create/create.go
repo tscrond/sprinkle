@@ -1,11 +1,21 @@
 package create
 
-import "github.com/spf13/cobra"
+import (
+	"log"
+	"os"
+
+	"github.com/spf13/cobra"
+)
 
 func init() {
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	CreateResource.PersistentFlags().String("target-node", "", "Target PVE node name")
 	CreateResource.PersistentFlags().String("type", "lxc", "Node type (lxc or vm)")
+	CreateResource.PersistentFlags().String("machine-name", "sigma", "Whatever name you want")
 
 	CreateResource.PersistentFlags().String("os-template", "debian-11-standard_11.7-1_amd64.tar.zst", "Name for the OS template located in vztmpl in one of the storage systems (example: debian-11-standard_11.7-1_amd64.tar.zst, template.tar.gz)")
 	CreateResource.PersistentFlags().String("network-bridge", "vmbr0", "Network bridge to use")
@@ -17,6 +27,7 @@ func init() {
 	CreateResource.PersistentFlags().Bool("start-on-boot", false, "Start Machine on Boot")
 
 	CreateResource.PersistentFlags().String("config-file", "", "Specify config file to read configuration from")
+	CreateResource.PersistentFlags().StringSlice("ssh-pubkey-file", []string{homedir + "/.ssh/id_rsa.pub"}, "Paths to SSH Public key file - IMPORTANT: it's possible to have more paths, just call --ssh-pubkey-file more than once")
 
 	CreateResource.AddCommand(createCluster)
 	CreateResource.AddCommand(createMachine)

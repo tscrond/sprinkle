@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -26,6 +27,10 @@ func CreateMachine(apiNode, targetNode string, config MachineConfig) (int, error
 		log.Fatalln("No such machine type defined: ", config.MachineType)
 	}
 
+	sshKeysFromFiles := getSSHKeysFromFiles(config.SshKeys)
+
+	fmt.Println("SSH Keys read:", sshKeysFromFiles)
+
 	// // Create form data
 	data := url.Values{}
 	data.Set("vmid", strconv.Itoa(config.ID)) // VM or container ID
@@ -33,6 +38,7 @@ func CreateMachine(apiNode, targetNode string, config MachineConfig) (int, error
 
 	data.Set("storage", config.StorageBackend)       // Storage backend (example: local-lvm, local, ceph etc.)
 	data.Set("cores", strconv.Itoa(config.CPUCount)) // CPU cores
+	data.Set("memory", strconv.Itoa(config.Memory))  // Memory size in MB
 
 	// If tags are present, add them to the request
 	if config.Tags != "" {
@@ -41,13 +47,18 @@ func CreateMachine(apiNode, targetNode string, config MachineConfig) (int, error
 
 	if config.MachineType == "lxc" {
 		// Parameters specific to LXC
+		fmt.Println("net0", fmt.Sprintf("name=%s,bridge=%s,ip=%s,gw=%s", config.NetworkInterface, config.NetworkBridge, config.IPAddress, config.DefaultGateway))
+
 		data.Set("hostname", config.Name)
 		data.Set("ostemplate", fmt.Sprintf("%s:vztmpl/%s", config.TemplateBackend, config.OsTemplate))                                                         // OS Template
 		data.Set("rootfs", fmt.Sprintf("%s:%d", config.StorageBackend, config.DiskSize))                                                                       // Disk size and storage
 		data.Set("net0", fmt.Sprintf("name=%s,bridge=%s,ip=%s,gw=%s", config.NetworkInterface, config.NetworkBridge, config.IPAddress, config.DefaultGateway)) // Network
 		data.Set("swap", strconv.Itoa(config.SwapSize))                                                                                                        // Swap size in MB
+		data.Set("ssh-public-keys", strings.Join(sshKeysFromFiles, "\n"))
+
 	} else if config.MachineType == "vm" {
 		// Parameters specific to VM
+		fmt.Println("net0", fmt.Sprintf("model=virtio,bridge=%s", config.NetworkBridge))
 		data.Set("name", config.Name)                                                              // VM Name
 		data.Set("ide0", fmt.Sprintf("%s:%.2f", config.StorageBackend, float64(config.DiskSize)))  // Disk size
 		data.Set("ide2", fmt.Sprintf("%s:iso/%s,media=cdrom", config.TemplateBackend, config.ISO)) // CD/DVD drive with ISO
@@ -92,6 +103,21 @@ func CreateMachine(apiNode, targetNode string, config MachineConfig) (int, error
 	return resp.StatusCode, nil
 }
 
+func getSSHKeysFromFiles(paths []string) []string {
+	var allKeys []string
+
+	for _, p := range paths {
+		dat, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		fmt.Print(string(dat))
+		allKeys = append(allKeys, string(dat))
+	}
+
+	return allKeys
+}
+
 // btoi is a helper function to convert bool to int (1 for true, 0 for false)
 func btoi(b bool) int {
 	if b {
@@ -106,6 +132,11 @@ func CreateCluster(apiNode, targetNode string, clusterConfig ClusterConfig) (int
 	if err != nil {
 		fmt.Println("Error parsing IP range:", err)
 		return -1, err
+	}
+
+	if len(ipRangeNumbers) < clusterConfig.WorkerNodeCount+clusterConfig.MasterNodeCount {
+		fmt.Printf("Not enough IPs in the range provided: %+v len=%d, need=%d\n", clusterConfig.IPRange, len(ipRangeNumbers), clusterConfig.WorkerNodeCount+clusterConfig.MasterNodeCount)
+		return -1, errors.New("not_enough_ips_in_range")
 	}
 
 	baseWorkerName := clusterConfig.WorkerConfig.Name
