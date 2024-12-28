@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tscrond/sprinkle/cmd/auth"
+	create "github.com/tscrond/sprinkle/cmd/create"
 )
 
 var rootCmd = &cobra.Command{
@@ -24,8 +26,6 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().String("api-url", "", "Proxmox API address (example: proxmox.example.com)")
 
-	rootCmd.AddCommand(pveLogin)
-	rootCmd.AddCommand(testConn)
-
-	rootCmd.AddCommand(createResource)
+	rootCmd.AddCommand(auth.Auth)
+	rootCmd.AddCommand(create.CreateResource)
 }
