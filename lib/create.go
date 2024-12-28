@@ -34,6 +34,11 @@ func CreateMachine(apiNode, targetNode string, config MachineConfig) (int, error
 	data.Set("storage", config.StorageBackend)       // Storage backend (example: local-lvm, local, ceph etc.)
 	data.Set("cores", strconv.Itoa(config.CPUCount)) // CPU cores
 
+	// If tags are present, add them to the request
+	if config.Tags != "" {
+		data.Set("tags", config.Tags)
+	}
+
 	if config.MachineType == "lxc" {
 		// Parameters specific to LXC
 		data.Set("hostname", config.Name)

@@ -114,7 +114,7 @@ var createCluster = &cobra.Command{
 				CPUCount:        workerNodeCores,
 				OnBoot:          onBoot,
 				ISO:             nodeISO,
-				Tags:            workerNodeTags,
+				Tags:            workerNodeTags + fmt.Sprintf(";%s", clusterName),
 			}
 
 			masterNodeConfig = lib.MachineConfig{
@@ -133,7 +133,7 @@ var createCluster = &cobra.Command{
 				CPUCount:        masterNodeCores,
 				OnBoot:          onBoot,
 				ISO:             nodeISO,
-				Tags:            masterNodeTags,
+				Tags:            masterNodeTags + fmt.Sprintf(";%s", clusterName),
 			}
 
 			clusterConfig = &lib.ClusterConfig{
@@ -195,34 +195,51 @@ func returnNodeConfigFromPreset(clusterName, preset string) *lib.ClusterConfig {
 	switch preset {
 	case "small":
 		fmt.Println("Small preset")
-		return &lib.ClusterConfig{
+		clusterconf := &lib.ClusterConfig{
 			MasterConfig:    SMALL_PRESET_MASTER,
 			WorkerConfig:    SMALL_PRESET_WORKER,
 			WorkerNodeCount: 3,
 			MasterNodeCount: 1,
 			ClusterName:     clusterName,
 		}
+		clusterconf.MasterConfig.Tags += fmt.Sprintf(";%s", clusterName)
+		clusterconf.WorkerConfig.Tags += fmt.Sprintf(";%s", clusterName)
+
+		return clusterconf
+
 	case "balanced":
 		fmt.Println("Balanced preset")
-		return &lib.ClusterConfig{
+		clusterconf := &lib.ClusterConfig{
 			MasterConfig:    SMALL_PRESET_MASTER,
 			WorkerConfig:    MEDIUM_PRESET_WORKER,
 			WorkerNodeCount: 5,
 			MasterNodeCount: 3,
 			ClusterName:     clusterName,
 		}
+
+		clusterconf.MasterConfig.Tags += fmt.Sprintf(";%s", clusterName)
+		clusterconf.WorkerConfig.Tags += fmt.Sprintf(";%s", clusterName)
+
+		return clusterconf
+
 	case "balanced-storage":
 		fmt.Println("Balanced storage-oriented preset")
-		return &lib.ClusterConfig{
+		clusterconf := &lib.ClusterConfig{
 			MasterConfig:    SMALL_STORAGE_PRESET_MASTER,
 			WorkerConfig:    MEDIUM_STORAGE_PRESET_WORKER,
 			WorkerNodeCount: 5,
 			MasterNodeCount: 3,
 			ClusterName:     clusterName,
 		}
+
+		clusterconf.MasterConfig.Tags += fmt.Sprintf(";%s", clusterName)
+		clusterconf.WorkerConfig.Tags += fmt.Sprintf(";%s", clusterName)
+
+		return clusterconf
+
 	case "medium":
 		fmt.Println("Medium preset")
-		return &lib.ClusterConfig{
+		clusterconf := &lib.ClusterConfig{
 			MasterConfig:    MEDIUM_PRESET_MASTER,
 			WorkerConfig:    MEDIUM_PRESET_WORKER,
 			WorkerNodeCount: 5,
@@ -230,15 +247,25 @@ func returnNodeConfigFromPreset(clusterName, preset string) *lib.ClusterConfig {
 			ClusterName:     clusterName,
 		}
 
+		clusterconf.MasterConfig.Tags += fmt.Sprintf(";%s", clusterName)
+		clusterconf.WorkerConfig.Tags += fmt.Sprintf(";%s", clusterName)
+
+		return clusterconf
+
 	case "large":
 		fmt.Println("Large preset")
-		return &lib.ClusterConfig{
+		clusterconf := &lib.ClusterConfig{
 			MasterConfig:    LARGE_PRESET_MASTER,
 			WorkerConfig:    LARGE_PRESET_WORKER,
 			WorkerNodeCount: 9,
 			MasterNodeCount: 5,
 			ClusterName:     clusterName,
 		}
+		clusterconf.MasterConfig.Tags += fmt.Sprintf(";%s", clusterName)
+		clusterconf.WorkerConfig.Tags += fmt.Sprintf(";%s", clusterName)
+
+		return clusterconf
+
 	default:
 		fmt.Println("no such preset")
 		return nil
