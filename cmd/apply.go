@@ -5,8 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tscrond/sprinkle/config"
+	"github.com/tscrond/sprinkle/internal/auth"
 	"github.com/tscrond/sprinkle/internal/configmapper"
-	"github.com/tscrond/sprinkle/pkg/lib"
+	"github.com/tscrond/sprinkle/internal/db"
 )
 
 func init() {
@@ -20,7 +21,10 @@ var ApplyConfig = &cobra.Command{
 
 		dbPath, _ := cmd.Flags().GetString("db-path")
 		configFile, _ := cmd.Flags().GetString("config")
-		fmt.Println(dbPath)
+		db, err := db.NewResourceRepository(dbPath)
+		if err != nil {
+			panic(err)
+		}
 
 		configManager := config.NewConfigManager()
 		config, err := configManager.LoadConfigFromYAML(configFile)
@@ -29,13 +33,9 @@ var ApplyConfig = &cobra.Command{
 		}
 
 		config = configmapper.PropagateDefaults(config)
-		fmt.Println("")
-		lib.PrettyPrintStruct(config)
+		authConfigs := configmapper.MapConfigToAuthConfig(config)
 
-		// dbConfig, err := configmapper.ConvertConfigToDBModel(config)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// lib.PrettyPrintStruct(dbConfig)
+		authService := auth.NewAuthService(db, authConfigs)
+		fmt.Println(authService)
 	},
 }

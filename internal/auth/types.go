@@ -1,6 +1,6 @@
 package auth
 
-type Credentials struct {
-	Username string
-	Password string
+type AuthConfig struct {
+	TargetNode string
+	ApiUrl     string
 }

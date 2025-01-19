@@ -51,3 +51,15 @@ type SSHKey struct {
 	Key             string
 	Path            string
 }
+
+type Credentials struct {
+	gorm.Model
+	ID         uint `gorm:"primaryKey"`
+	HostID     uint
+	TargetNode string
+	ApiUrl     string
+	Username   string
+	Password   string
+	CsrfToken  string
+	PVETicket  string
+}

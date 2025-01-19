@@ -2,9 +2,20 @@ package configmapper
 
 import (
 	"github.com/jinzhu/copier"
+
 	"github.com/tscrond/sprinkle/config"
+	"github.com/tscrond/sprinkle/internal/auth"
 	"github.com/tscrond/sprinkle/internal/db"
 )
+
+func MapConfigToAuthConfig(cfg *config.HostConfigYAML) []auth.AuthConfig {
+	var authConfigs []auth.AuthConfig
+	for _, host := range cfg.Hosts {
+		authConfigs = append(authConfigs, auth.AuthConfig{ApiUrl: host.ApiUrl, TargetNode: host.TargetNode})
+	}
+
+	return authConfigs
+}
 
 func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error) {
 	var dbHostConfigs []db.HostConfig
