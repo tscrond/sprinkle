@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tscrond/sprinkle/config"
+	"github.com/tscrond/sprinkle/internal/configmapper"
+	"github.com/tscrond/sprinkle/pkg/lib"
 )
 
 func init() {
@@ -21,11 +23,19 @@ var ApplyConfig = &cobra.Command{
 		fmt.Println(dbPath)
 
 		configManager := config.NewConfigManager()
-		configManager.LoadConfigFromYAML(configFile)
-		config := configManager.Config
+		config, err := configManager.LoadConfigFromYAML(configFile)
+		if err != nil {
+			panic(err)
+		}
 
-		
-		fmt.Printf("%+v", config)
+		config = configmapper.PropagateDefaults(config)
+		fmt.Println("")
+		lib.PrettyPrintStruct(config)
 
+		// dbConfig, err := configmapper.ConvertConfigToDBModel(config)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// lib.PrettyPrintStruct(dbConfig)
 	},
 }

@@ -4,11 +4,11 @@ type HostConfigYAML struct {
 	Hosts map[string]struct {
 		ApiUrl     string `mapstructure:"api-url"`
 		TargetNode string `mapstructure:"target-node"`
-		LXC        struct {
+		LXCs       struct {
 			Default  MachineConfigYAML   `mapstructure:"default"`
 			Machines []MachineConfigYAML `mapstructure:"machines"`
 		} `mapstructure:"lxc"`
-		VM struct {
+		VMs struct {
 			Default  MachineConfigYAML   `mapstructure:"default"`
 			Machines []MachineConfigYAML `mapstructure:"machines"`
 		} `mapstructure:"vm"`
@@ -20,7 +20,6 @@ type MachineConfigYAML struct {
 	VmId             int      `mapstructure:"vmid"`
 	OsTemplate       string   `mapstructure:"os-template,omitempty"`
 	ISO              string   `mapstructure:"iso,omitempty"`
-	SshPublicKeys    []string `mapstructure:"ssh-public-keys"`
 	IPAddress        string   `mapstructure:"ip-address"`
 	CPUs             int      `mapstructure:"cpus"`
 	Memory           int      `mapstructure:"memory"`
@@ -33,4 +32,10 @@ type MachineConfigYAML struct {
 	NetworkBridge    string   `mapstructure:"network-bridge,omitempty"`
 	NetworkInterface string   `mapstructure:"network-interface,omitempty"`
 	DefaultGateway   string   `mapstructure:"default-gateway,omitempty"`
+	SshPublicKeys    []SSHKey `mapstructure:"ssh-public-keys"`
+}
+
+type SSHKey struct {
+	Path string `mapstructure:"path,omitempty"`
+	Key  string `mapstructure:"key,omitempty"`
 }

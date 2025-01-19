@@ -3,25 +3,25 @@ package config
 import "github.com/spf13/viper"
 
 type ConfigManager struct {
-	Config *HostConfigYAML
+	ConfigYAML *HostConfigYAML
 }
 
 func NewConfigManager() *ConfigManager {
-
 	return &ConfigManager{
-		Config: &HostConfigYAML{},
+		ConfigYAML: &HostConfigYAML{},
 	}
 }
 
-func (cm *ConfigManager) LoadConfigFromYAML(configFile string) error {
+func (cm *ConfigManager) LoadConfigFromYAML(configFile string) (*HostConfigYAML, error) {
 	viper.SetConfigFile(configFile)
 	if err := viper.ReadInConfig(); err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := viper.Unmarshal(cm.Config); err != nil {
-		return err
+	if err := viper.Unmarshal(cm.ConfigYAML); err != nil {
+		return nil, err
 	}
+	config := cm.ConfigYAML
 
-	return nil
+	return config, nil
 }
