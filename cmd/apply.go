@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 	"github.com/tscrond/sprinkle/config"
 	"github.com/tscrond/sprinkle/internal/auth"
 	"github.com/tscrond/sprinkle/internal/configmapper"
 	"github.com/tscrond/sprinkle/internal/db"
+	"github.com/tscrond/sprinkle/pkg/lib"
 )
 
 func init() {
@@ -33,9 +34,13 @@ var ApplyConfig = &cobra.Command{
 		}
 
 		config = configmapper.PropagateDefaults(config)
-		authConfigs := configmapper.MapConfigToAuthConfig(config)
 
-		authService := auth.NewAuthService(db, authConfigs)
-		fmt.Println(authService)
+		authService := auth.NewAuthService(db)
+		creds, err := authService.Authenticate("genesis", "192.168.1.102:8006")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		// fmt.Printf("%+v", creds)
+		lib.PrettyPrintStruct(creds)
 	},
 }

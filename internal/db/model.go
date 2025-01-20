@@ -1,6 +1,8 @@
 package db
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type HostConfig struct {
 	gorm.Model `copier:"-"`
@@ -56,8 +58,8 @@ type Credentials struct {
 	gorm.Model
 	ID         uint `gorm:"primaryKey"`
 	HostID     uint
-	TargetNode string
-	ApiUrl     string
+	TargetNode string `gorm:"uniqueIndex:idx_target_api"`
+	ApiUrl     string `gorm:"uniqueIndex:idx_target_api"`
 	Username   string
 	Password   string
 	CsrfToken  string

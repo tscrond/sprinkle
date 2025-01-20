@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 
 	"gorm.io/driver/sqlite"
@@ -34,10 +35,27 @@ func (repo *ResourceRepository) SaveCredentials(creds *Credentials) error {
 	return nil
 }
 
-func (repo *ResourceRepository) GetCredentials(apiUrl, targetNode string) (*Credentials, error) {
+func (repo *ResourceRepository) GetCredentials(targetNode, apiUrl string) (*Credentials, error) {
 	var creds Credentials
+
 	if err := repo.Database.Where("target_node = ? AND api_url = ?", targetNode, apiUrl).First(&creds).Error; err != nil {
 		return nil, err
 	}
 	return &creds, nil
+}
+
+func (repo *ResourceRepository) CredsExist(targetNode, apiUrl string) bool {
+	result := repo.Database.Where("target_node = ? AND api_url = ?", targetNode, apiUrl).First(&Credentials{})
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false
+		}
+		fmt.Println(result.Error)
+		return false
+	}
+	return true
+}
+
+func (repo *ResourceRepository) UpdateCredentials(creds *Credentials) error {
+	return repo.Database.Where("target_node = ? AND api_url = ?", creds.TargetNode, creds.ApiUrl).First(&Credentials{}).Error
 }

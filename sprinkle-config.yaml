@@ -25,7 +25,7 @@ hosts:
           tags: "asdf;fdsa;fds"
 
         - name: "secondlxc"
-          vmid: 112
+          vmid: 113
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:
             - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE tomasz.skrond@boar.network"
