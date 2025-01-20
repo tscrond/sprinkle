@@ -42,5 +42,6 @@ var ApplyConfig = &cobra.Command{
 		}
 		// fmt.Printf("%+v", creds)
 		lib.PrettyPrintStruct(creds)
+
 	},
 }
