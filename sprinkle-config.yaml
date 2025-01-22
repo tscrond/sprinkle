@@ -11,7 +11,7 @@ hosts:
         network-bridge: "vmbr0"
         network-interface: "eth0"
       machines:
-        - name: "firstlxc"
+        - name: "firstlxckurczeblade"
           vmid: 112
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:

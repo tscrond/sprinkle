@@ -6,16 +6,18 @@ import (
 
 type ConfigManager struct {
 	ConfigYAML *HostConfigYAML
+	DbPath     string
 }
 
-func NewConfigManager() *ConfigManager {
+func NewConfigManager(dbPath string) *ConfigManager {
 	return &ConfigManager{
 		ConfigYAML: &HostConfigYAML{},
+		DbPath:     dbPath,
 	}
 }
 
-func (cm *ConfigManager) LoadConfigFromYAML(configFile string) (*HostConfigYAML, error) {
-	viper.SetConfigFile(configFile)
+func (cm *ConfigManager) LoadConfigFromYAML() (*HostConfigYAML, error) {
+	viper.SetConfigFile(cm.DbPath)
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}

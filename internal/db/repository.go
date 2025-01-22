@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ResourceRepository struct {
@@ -58,4 +59,73 @@ func (repo *ResourceRepository) CredsExist(targetNode, apiUrl string) bool {
 
 func (repo *ResourceRepository) UpdateCredentials(creds *Credentials) error {
 	return repo.Database.Where("target_node = ? AND api_url = ?", creds.TargetNode, creds.ApiUrl).First(&Credentials{}).Error
+}
+
+func (repo *ResourceRepository) GetAllHostConfigs() ([]HostConfig, error) {
+	var hostConfigs []HostConfig
+
+	// Use Preload to fetch all related nested data
+	if err := repo.Database.
+		Preload("LXCs.Machines.SSHPublicKeys").
+		Preload("VMs.Machines.SSHPublicKeys").
+		Find(&hostConfigs).Error; err != nil {
+		return nil, err
+	}
+
+	return hostConfigs, nil
+}
+
+func (repo *ResourceRepository) InsertHostConfigs(hostConfigs []HostConfig) error {
+	return repo.Database.Transaction(func(tx *gorm.DB) error {
+		for _, hostConfig := range hostConfigs {
+			// Insert or update each HostConfig
+			if err := tx.Clauses(clause.OnConflict{
+				UpdateAll: true, // Update all fields if a conflict occurs
+			}).Create(&hostConfig).Error; err != nil {
+				return fmt.Errorf("failed to insert/update host config for node %s: %w", hostConfig.TargetNode, err)
+			}
+
+			// Insert child LXCs for this HostConfig
+			for _, lxc := range hostConfig.LXCs {
+				lxc.HostID = hostConfig.ID
+				if err := tx.Clauses(clause.OnConflict{
+					UpdateAll: true,
+				}).Create(&lxc).Error; err != nil {
+					return fmt.Errorf("failed to insert/update LXC config for host %s: %w", hostConfig.TargetNode, err)
+				}
+
+				// Insert Machines under this LXC
+				for _, machine := range lxc.Machines {
+					machine.LXCConfigID = lxc.ID
+					if err := tx.Clauses(clause.OnConflict{
+						UpdateAll: true,
+					}).Create(&machine).Error; err != nil {
+						return fmt.Errorf("failed to insert/update machine under LXC %s: %w", machine.Name, err)
+					}
+				}
+			}
+
+			// Insert child VMs for this HostConfig
+			for _, vm := range hostConfig.VMs {
+				vm.HostID = hostConfig.ID
+				if err := tx.Clauses(clause.OnConflict{
+					UpdateAll: true,
+				}).Create(&vm).Error; err != nil {
+					return fmt.Errorf("failed to insert/update VM config for host %s: %w", hostConfig.TargetNode, err)
+				}
+
+				// Insert Machines under this VM
+				for _, machine := range vm.Machines {
+					machine.VMConfigID = vm.ID
+					if err := tx.Clauses(clause.OnConflict{
+						UpdateAll: true,
+					}).Create(&machine).Error; err != nil {
+						return fmt.Errorf("failed to insert/update machine under VM %s: %w", machine.Name, err)
+					}
+				}
+			}
+		}
+
+		return nil
+	})
 }

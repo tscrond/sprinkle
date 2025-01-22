@@ -8,6 +8,7 @@ import (
 	"github.com/tscrond/sprinkle/internal/auth"
 	"github.com/tscrond/sprinkle/internal/configmapper"
 	"github.com/tscrond/sprinkle/internal/db"
+	"github.com/tscrond/sprinkle/internal/provisioner"
 	"github.com/tscrond/sprinkle/pkg/lib"
 )
 
@@ -27,8 +28,8 @@ var ApplyConfig = &cobra.Command{
 			panic(err)
 		}
 
-		configManager := config.NewConfigManager()
-		config, err := configManager.LoadConfigFromYAML(configFile)
+		configManager := config.NewConfigManager(configFile)
+		config, err := configManager.LoadConfigFromYAML()
 		if err != nil {
 			panic(err)
 		}
@@ -42,6 +43,12 @@ var ApplyConfig = &cobra.Command{
 		}
 		// fmt.Printf("%+v", creds)
 		lib.PrettyPrintStruct(creds)
+
+		provisioner := provisioner.NewProxmoxProvisioner(authService, configManager)
+		// provisioner.CreateResources()
+		if err := provisioner.ApplyDiff(); err != nil {
+			log.Fatalln(err)
+		}
 
 	},
 }
