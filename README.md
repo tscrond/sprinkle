@@ -46,7 +46,7 @@ sprinkle <command> [flags]
 
 ### Available Commands
 
-#### `init`
+#### `init` - TODO
 
 Initializes a configuration file for managing Proxmox resources.
 
@@ -54,7 +54,7 @@ Initializes a configuration file for managing Proxmox resources.
 sprinkle init
 ```
 
-This command creates a basic configuration file, typically named `sprinkle.yaml`, in your current working directory. You can modify this file to define your VMs and LXCs.
+This command creates a basic configuration file, typically named `sprinkle-config.yaml`, in your current working directory. You can modify this file to define your VMs and LXCs.
 
 #### `apply`
 
@@ -64,9 +64,9 @@ Applies the changes defined in the configuration file to your Proxmox setup.
 sprinkle apply
 ```
 
-This command reads the `sprinkle.yaml` file and ensures that the Proxmox infrastructure is in sync with the configurations specified in the file. It will create, update, or delete VMs and LXCs as necessary.
+This command reads the `sprinkle-config.yaml` file and ensures that the Proxmox infrastructure is in sync with the configurations specified in the file. It will create, update, or delete VMs and LXCs as necessary.
 
-#### `destroy`
+#### `destroy` - TODO
 
 Destroys the resources (VMs or LXCs) defined in your configuration file.
 
@@ -76,7 +76,7 @@ sprinkle destroy
 
 This command deletes the VMs or LXCs that were previously created using `sprinkle apply`. 
 
-### Configuration File (`sprinkle.yaml`)
+### Configuration File (`sprinkle-config.yaml`)
 
 The configuration file is a YAML file where you define your infrastructure. Here’s an example:
 
@@ -112,9 +112,9 @@ In this example, the configuration defines both a VM (`web-server`) and an LXC (
 
 ### Flags
 
-- `-f`, `--file`: Specify the path to the configuration file. If not specified, `sprinkle` looks for a file named `sprinkle.yaml` in the current directory.
-- `-d`, `--dry-run`: Simulate the changes without actually applying them. This is useful for previewing the changes before making them.
-- `-v`, `--verbose`: Enable verbose output for more detailed logs.
+- `-f`, `--file`: Specify the path to the configuration file. If not specified, `sprinkle` looks for a file named `sprinkle-config.yaml` in the current directory.
+- `-d`, `--dry-run` - TODO: Simulate the changes without actually applying them. This is useful for previewing the changes before making them.
+- `-v`, `--verbose` - TODO: Enable verbose output for more detailed logs.
 
 ### Example Usage
 
@@ -144,7 +144,7 @@ In this example, the configuration defines both a VM (`web-server`) and an LXC (
 
 ## Configuration Options
 
-- **VM/LXC Network Configuration:** Define network bridge, IP address type (`dhcp` or static), and firewall settings.
+- **VM/LXC Network Configuration:** Define network bridge, IP addresses and SSH keys.
 - **Resources:** Specify CPU cores, memory, disk size, and storage backend.
 - **Templates:** Choose a template for VMs and LXCs, which should be pre-existing on your Proxmox server.
 

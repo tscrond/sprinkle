@@ -11,7 +11,7 @@ hosts:
         network-bridge: "vmbr0"
         network-interface: "eth0"
       machines:
-        - name: "firstlxckurczeblade"
+        - name: "firstlxc123"
           vmid: 112
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:
@@ -24,12 +24,12 @@ hosts:
           swap-size: 20
           tags: "asdf;fdsa;fds"
 
-        - name: "secondlxc"
+        - name: "secondlxc321"
           vmid: 113
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:
-            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE tomasz.skrond@boar.network"
-            - path: "/Users/tskr/.ssh/genesis.pub"
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+            - path: "/Users/user/.ssh/genesis.pub"
           start-on-boot: false
           storage-backend: local-lvm
           template-backend: local
@@ -55,8 +55,8 @@ hosts:
           vmid: 114
           iso: "ubuntu-24.04.1-live-server-amd64.iso"
           ssh-public-keys:
-            key1: "/Users/tskr/.ssh/id_rsa.pub"
-            key2: "/Users/tskr/.ssh/genesis.pub"
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+            - path: "/Users/user/.ssh/genesis.pub"
           cpus: 4
           memory: 2048
           disk-size: 100
@@ -81,8 +81,8 @@ hosts:
           vmid: 1122
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:
-            key1: "/Users/tskr/.ssh/id_rsa.pub"
-            key2: "/Users/tskr/.ssh/genesis.pub"
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+            - path: "/Users/user/.ssh/genesis.pub"
           ip-address: "192.168.1.20/24"
           cpus: 4
           memory: 2048
@@ -95,8 +95,8 @@ hosts:
           vmid: 1124
           os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
           ssh-public-keys:
-            key1: "/Users/tskr/.ssh/id_rsa.pub"
-            key2: "/Users/tskr/.ssh/genesis.pub"
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+            - path: "/Users/user/.ssh/genesis.pub"
           ip-address: "192.168.1.21/24"
           cpus: 4
           memory: 2048
@@ -117,8 +117,8 @@ hosts:
             vmid: 11443
             iso: "ubuntu-24.04.1-live-server-amd64.iso"
             ssh-public-keys:
-              key1: "/Users/tskr/.ssh/id_rsa.pub"
-              key2: "/Users/tskr/.ssh/genesis.pub"
+              - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+              - path: "/Users/user/.ssh/genesis.pub"
             cpus: 4
             memory: 2048
             disk-size: 100
