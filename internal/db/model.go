@@ -1,36 +1,20 @@
 package db
 
-import (
-	"gorm.io/gorm"
-)
+import "time"
 
 type HostConfig struct {
-	gorm.Model `copier:"-"`
-	TargetNode string
+	Metadata
+	TargetNode string `gorm:"primaryKey"`
 	ApiURL     string
-	LXCs       []LXCConfig `gorm:"foreignKey:HostID"`
-	VMs        []VMConfig  `gorm:"foreignKey:HostID"`
-}
-
-type LXCConfig struct {
-	gorm.Model `copier:"-"`
-	HostID     uint            `copier:"-"`
-	Machines   []MachineConfig `gorm:"foreignKey:LXCConfigID"`
-}
-
-type VMConfig struct {
-	gorm.Model `copier:"-"`
-	HostID     uint            `copier:"-"`
-	Machines   []MachineConfig `gorm:"foreignKey:LXCConfigID"`
+	Machines   []MachineConfig `gorm:"foreignKey:TargetNode;constraint:OnDelete:CASCADE"`
 }
 
 type MachineConfig struct {
-	gorm.Model       `copier:"-"`
-	LXCConfigID      uint `copier:"-"`
-	VMConfigID       uint `copier:"-"`
+	Metadata
+	VmId             int `gorm:"primaryKey"` // Primary Key
+	Type             string
 	Name             string
-	VmId             int
-	OsTemplate       string `gorm:"column:os-template"`
+	OsTemplate       string
 	ISO              string
 	IPAddress        string
 	CPUs             int
@@ -38,30 +22,35 @@ type MachineConfig struct {
 	DiskSize         int
 	SwapSize         int
 	Tags             string
-	StartOnBoot      bool `gorm:"column:start-on-boot"`
+	StartOnBoot      bool
 	StorageBackend   string
 	TemplateBackend  string
 	NetworkBridge    string
 	NetworkInterface string
 	DefaultGateway   string
-	SSHPublicKeys    []SSHKey `gorm:"foreignKey:MachineConfigID"`
+	TargetNode       string   `gorm:"index"` // Foreign Key to HostConfig
+	SSHPublicKeys    []SSHKey `gorm:"foreignKey:VmId;constraint:OnDelete:CASCADE"`
 }
 
 type SSHKey struct {
-	gorm.Model      `copier:"-"`
-	MachineConfigID uint `copier:"-"`
-	Key             string
-	Path            string
+	Metadata
+	ID   uint    `gorm:"primaryKey"`
+	VmId int     `gorm:"index"`
+	Key  *string `gorm:"type:text"`
+	Path *string `gorm:"type:text"`
 }
 
 type Credentials struct {
-	gorm.Model
-	ID         uint `gorm:"primaryKey"`
-	HostID     uint
-	TargetNode string `gorm:"uniqueIndex:idx_target_api"`
-	ApiUrl     string `gorm:"uniqueIndex:idx_target_api"`
+	Metadata
+	TargetNode string
+	ApiUrl     string
 	Username   string
 	Password   string
 	CsrfToken  string
 	PVETicket  string
+}
+
+type Metadata struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

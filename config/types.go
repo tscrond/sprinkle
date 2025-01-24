@@ -16,7 +16,8 @@ type HostConfigYAML struct {
 }
 
 type MachineConfigYAML struct {
-	Name             string   `mapstructure:"name"`
+	Name             string `mapstructure:"name"`
+	Type             string
 	VmId             int      `mapstructure:"vmid"`
 	OsTemplate       string   `mapstructure:"os-template,omitempty"`
 	ISO              string   `mapstructure:"iso,omitempty"`

@@ -37,17 +37,20 @@ var ApplyConfig = &cobra.Command{
 		config = configmapper.PropagateDefaults(config)
 
 		authService := auth.NewAuthService(db)
-		creds, err := authService.Authenticate("genesis", "192.168.1.102:8006")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		// fmt.Printf("%+v", creds)
-		lib.PrettyPrintStruct(creds)
 
-		provisioner := provisioner.NewProxmoxProvisioner(authService, configManager)
-		// provisioner.CreateResources()
-		if err := provisioner.ApplyDiff(); err != nil {
-			log.Fatalln(err)
+		for hostName, hostConfig := range config.Hosts {
+			creds, err := authService.Authenticate(hostName, hostConfig.ApiUrl)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			// fmt.Printf("%+v", creds)
+			lib.PrettyPrintStruct(creds)
+
+			provisioner := provisioner.NewProxmoxProvisioner(authService, configManager)
+			// provisioner.CreateResources()
+			if err := provisioner.ApplyDiff(hostName); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 	},

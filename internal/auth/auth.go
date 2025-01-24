@@ -155,6 +155,7 @@ func (a *AuthService) GetCredentials(targetNode, apiUrl string) (*db.Credentials
 func (a *AuthService) ReadCredentialsFromUser(targetNode, apiUrl string) *db.Credentials {
 	var username, password string
 
+	fmt.Println("Authenticating with node: ", targetNode)
 	// for now, shitty credential reading
 	fmt.Print("Enter username:")
 	fmt.Scanln(&username)

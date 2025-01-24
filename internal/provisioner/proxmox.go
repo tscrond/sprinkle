@@ -37,19 +37,19 @@ func (p *ProxmoxProvisioner) DestroyResource() error {
 // 3. check diff (using some library), save it to variable
 // 4. try to apply the diffed config (current desired state)
 // 5. if no failure, update database
-func (p *ProxmoxProvisioner) ApplyDiff() error {
+func (p *ProxmoxProvisioner) ApplyDiff(targetNode string) error {
 
 	newDbState, err := p.ComputeDiff()
 	if err != nil {
 		return err
 	}
 
-	if !p.PromptForApply() {
+	if !p.PromptForApply(targetNode) {
 		fmt.Println("Not applying new state!")
 		return nil
 	}
 
-	fmt.Println("Applying new state to Proxmox Nodes!")
+	fmt.Println("Applying new state to Proxmox Node!")
 	// TODO: call proxmox API to provision the resources/apply the changes
 
 	if err := p.AuthService.Db.InsertHostConfigs(newDbState); err != nil {
@@ -60,8 +60,9 @@ func (p *ProxmoxProvisioner) ApplyDiff() error {
 	return nil
 }
 
-func (p *ProxmoxProvisioner) PromptForApply() bool {
+func (p *ProxmoxProvisioner) PromptForApply(targetNode string) bool {
 	var apply string
+	fmt.Println("WARNING, altering node: ", targetNode)
 	fmt.Print("Do you want to apply? (yes/no): ")
 	fmt.Scanln(&apply)
 
@@ -83,10 +84,9 @@ func (p *ProxmoxProvisioner) ComputeDiff() ([]db.HostConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	stateFromDbConf, err := configmapper.ConvertDBModelToConfig(stateFromDb)
-	if err != nil {
-		return nil, err
-	}
+	stateFromDbConf := configmapper.ConvertDBModelToConfig(stateFromDb)
+
+	stateFromYaml = configmapper.PropagateDefaults(stateFromYaml)
 
 	p.DisplayDiff(stateFromYaml, stateFromDbConf)
 

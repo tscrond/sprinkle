@@ -1,8 +1,6 @@
 package configmapper
 
 import (
-	"github.com/jinzhu/copier"
-
 	"github.com/tscrond/sprinkle/config"
 	"github.com/tscrond/sprinkle/internal/auth"
 	"github.com/tscrond/sprinkle/internal/db"
@@ -18,64 +16,87 @@ func MapConfigToAuthConfig(cfg *config.HostConfigYAML) []auth.AuthConfig {
 }
 
 func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error) {
-	var dbHostConfigs []db.HostConfig
+	dbHostConfigs := []db.HostConfig{}
 
-	for _, hostConfigYaml := range cfg.Hosts {
-		var dbHostConf db.HostConfig
-		if err := copier.Copy(&dbHostConf, &hostConfigYaml); err != nil {
-			return nil, err
+	for nodeName, host := range cfg.Hosts {
+		hostconfig := db.HostConfig{
+			TargetNode: nodeName,
+			ApiURL:     host.ApiUrl,
 		}
-		// Map LXCs
-		var lxcConfigs []db.LXCConfig
-		for _, machine := range hostConfigYaml.LXCs.Machines {
-			var lxc db.LXCConfig
-			var dbMachines []db.MachineConfig
 
-			if err := copier.Copy(&dbMachines, &machine); err != nil {
-				return nil, err
+		for _, machine := range host.LXCs.Machines {
+			machinePubKeys := []db.SSHKey{}
+			for _, pubkey := range machine.SshPublicKeys {
+				machinePubKeys = append(machinePubKeys, db.SSHKey{
+					VmId: machine.VmId,
+					Key:  &pubkey.Key,
+					Path: &pubkey.Path,
+				})
 			}
-			lxc.Machines = dbMachines
-			lxcConfigs = append(lxcConfigs, lxc)
+
+			hostconfig.Machines = append(hostconfig.Machines, db.MachineConfig{
+				Type:             "lxc",
+				Name:             machine.Name,
+				VmId:             machine.VmId,
+				OsTemplate:       machine.OsTemplate,
+				ISO:              machine.ISO,
+				IPAddress:        machine.IPAddress,
+				CPUs:             machine.CPUs,
+				Memory:           machine.Memory,
+				DiskSize:         machine.DiskSize,
+				SwapSize:         machine.SwapSize,
+				Tags:             machine.Tags,
+				StartOnBoot:      machine.StartOnBoot,
+				StorageBackend:   machine.StorageBackend,
+				TemplateBackend:  machine.TemplateBackend,
+				NetworkBridge:    machine.NetworkBridge,
+				NetworkInterface: machine.NetworkInterface,
+				DefaultGateway:   machine.DefaultGateway,
+				SSHPublicKeys:    machinePubKeys,
+			})
+			dbHostConfigs = append(dbHostConfigs, hostconfig)
 		}
-		dbHostConf.LXCs = lxcConfigs
 
-		// Map VMs
-		var vmConfigs []db.VMConfig
-		for _, machine := range hostConfigYaml.VMs.Machines {
-			var vm db.VMConfig
-			var dbMachines []db.MachineConfig
-
-			if err := copier.Copy(&dbMachines, &machine); err != nil {
-				return nil, err
+		for _, machine := range host.VMs.Machines {
+			machinePubKeys := []db.SSHKey{}
+			for _, pubkey := range machine.SshPublicKeys {
+				machinePubKeys = append(machinePubKeys, db.SSHKey{
+					VmId: machine.VmId,
+					Key:  &pubkey.Key,
+					Path: &pubkey.Path,
+				})
 			}
-			vm.Machines = dbMachines
-			vmConfigs = append(vmConfigs, vm)
-		}
-		dbHostConf.VMs = vmConfigs
 
-		dbHostConfigs = append(dbHostConfigs, dbHostConf)
+			hostconfig.Machines = append(hostconfig.Machines, db.MachineConfig{
+				Type:             "vm",
+				Name:             machine.Name,
+				VmId:             machine.VmId,
+				OsTemplate:       machine.OsTemplate,
+				ISO:              machine.ISO,
+				IPAddress:        machine.IPAddress,
+				CPUs:             machine.CPUs,
+				Memory:           machine.Memory,
+				DiskSize:         machine.DiskSize,
+				SwapSize:         machine.SwapSize,
+				Tags:             machine.Tags,
+				StartOnBoot:      machine.StartOnBoot,
+				StorageBackend:   machine.StorageBackend,
+				TemplateBackend:  machine.TemplateBackend,
+				NetworkBridge:    machine.NetworkBridge,
+				NetworkInterface: machine.NetworkInterface,
+				DefaultGateway:   machine.DefaultGateway,
+				SSHPublicKeys:    machinePubKeys,
+			})
+			dbHostConfigs = append(dbHostConfigs, hostconfig)
+		}
 	}
+
 	return dbHostConfigs, nil
 }
 
-func ConvertDBModelToConfig(dbHostConfigs []db.HostConfig) (*config.HostConfigYAML, error) {
-	var cfg config.HostConfigYAML
-	cfg.Hosts = make(map[string]struct {
-		ApiUrl     string `mapstructure:"api-url"`
-		TargetNode string `mapstructure:"target-node"`
-		LXCs       struct {
-			Default  config.MachineConfigYAML   `mapstructure:"default"`
-			Machines []config.MachineConfigYAML `mapstructure:"machines"`
-		} `mapstructure:"lxc"`
-		VMs struct {
-			Default  config.MachineConfigYAML   `mapstructure:"default"`
-			Machines []config.MachineConfigYAML `mapstructure:"machines"`
-		} `mapstructure:"vm"`
-	})
-
-	// Iterate over the DB host configurations
-	for _, dbHostConfig := range dbHostConfigs {
-		hostConfigYaml := struct {
+func ConvertDBModelToConfig(dbModels []db.HostConfig) *config.HostConfigYAML {
+	yamlConfig := &config.HostConfigYAML{
+		Hosts: make(map[string]struct {
 			ApiUrl     string `mapstructure:"api-url"`
 			TargetNode string `mapstructure:"target-node"`
 			LXCs       struct {
@@ -86,93 +107,67 @@ func ConvertDBModelToConfig(dbHostConfigs []db.HostConfig) (*config.HostConfigYA
 				Default  config.MachineConfigYAML   `mapstructure:"default"`
 				Machines []config.MachineConfigYAML `mapstructure:"machines"`
 			} `mapstructure:"vm"`
-		}{}
-
-		// Map HostConfig fields (ApiUrl, TargetNode)
-		hostConfigYaml.ApiUrl = dbHostConfig.ApiURL
-		hostConfigYaml.TargetNode = dbHostConfig.TargetNode
-
-		// Map LXCs
-		for _, lxcConfig := range dbHostConfig.LXCs {
-			// Map LXC Machines
-			for _, machineConfig := range lxcConfig.Machines {
-				machineYaml := config.MachineConfigYAML{
-					Name:             machineConfig.Name,
-					VmId:             machineConfig.VmId,
-					OsTemplate:       machineConfig.OsTemplate,
-					ISO:              machineConfig.ISO,
-					IPAddress:        machineConfig.IPAddress,
-					CPUs:             machineConfig.CPUs,
-					Memory:           machineConfig.Memory,
-					DiskSize:         machineConfig.DiskSize,
-					SwapSize:         machineConfig.SwapSize,
-					Tags:             machineConfig.Tags,
-					StartOnBoot:      machineConfig.StartOnBoot,
-					StorageBackend:   machineConfig.StorageBackend,
-					TemplateBackend:  machineConfig.TemplateBackend,
-					NetworkBridge:    machineConfig.NetworkBridge,
-					NetworkInterface: machineConfig.NetworkInterface,
-					DefaultGateway:   machineConfig.DefaultGateway,
-				}
-
-				// Map SSH keys
-				var sshKeys []config.SSHKey
-				for _, dbSSHKey := range machineConfig.SSHPublicKeys {
-					sshKey := config.SSHKey{
-						Path: dbSSHKey.Path,
-						Key:  dbSSHKey.Key,
-					}
-					sshKeys = append(sshKeys, sshKey)
-				}
-				machineYaml.SshPublicKeys = sshKeys
-
-				hostConfigYaml.LXCs.Machines = append(hostConfigYaml.LXCs.Machines, machineYaml)
-			}
-		}
-
-		// Map VMs
-		for _, vmConfig := range dbHostConfig.VMs {
-			// Map VM Machines
-			for _, machineConfig := range vmConfig.Machines {
-				machineYaml := config.MachineConfigYAML{
-					Name:             machineConfig.Name,
-					VmId:             machineConfig.VmId,
-					OsTemplate:       machineConfig.OsTemplate,
-					ISO:              machineConfig.ISO,
-					IPAddress:        machineConfig.IPAddress,
-					CPUs:             machineConfig.CPUs,
-					Memory:           machineConfig.Memory,
-					DiskSize:         machineConfig.DiskSize,
-					SwapSize:         machineConfig.SwapSize,
-					Tags:             machineConfig.Tags,
-					StartOnBoot:      machineConfig.StartOnBoot,
-					StorageBackend:   machineConfig.StorageBackend,
-					TemplateBackend:  machineConfig.TemplateBackend,
-					NetworkBridge:    machineConfig.NetworkBridge,
-					NetworkInterface: machineConfig.NetworkInterface,
-					DefaultGateway:   machineConfig.DefaultGateway,
-				}
-
-				// Map SSH keys
-				var sshKeys []config.SSHKey
-				for _, dbSSHKey := range machineConfig.SSHPublicKeys {
-					sshKey := config.SSHKey{
-						Path: dbSSHKey.Path,
-						Key:  dbSSHKey.Key,
-					}
-					sshKeys = append(sshKeys, sshKey)
-				}
-				machineYaml.SshPublicKeys = sshKeys
-
-				hostConfigYaml.VMs.Machines = append(hostConfigYaml.VMs.Machines, machineYaml)
-			}
-		}
-
-		// Add the host config to the final map
-		cfg.Hosts[dbHostConfig.TargetNode] = hostConfigYaml
+		}),
 	}
 
-	return &cfg, nil
+	for _, hostConfig := range dbModels {
+		nodeConfig := struct {
+			ApiUrl     string `mapstructure:"api-url"`
+			TargetNode string `mapstructure:"target-node"`
+			LXCs       struct {
+				Default  config.MachineConfigYAML   `mapstructure:"default"`
+				Machines []config.MachineConfigYAML `mapstructure:"machines"`
+			} `mapstructure:"lxc"`
+			VMs struct {
+				Default  config.MachineConfigYAML   `mapstructure:"default"`
+				Machines []config.MachineConfigYAML `mapstructure:"machines"`
+			} `mapstructure:"vm"`
+		}{
+			ApiUrl:     hostConfig.ApiURL,
+			TargetNode: hostConfig.TargetNode,
+		}
+
+		for _, machine := range hostConfig.Machines {
+			machinePubKeys := []config.SSHKey{}
+			for _, pubkey := range machine.SSHPublicKeys {
+				machinePubKeys = append(machinePubKeys, config.SSHKey{
+					Key:  *pubkey.Key,
+					Path: *pubkey.Path,
+				})
+			}
+
+			machineConfig := config.MachineConfigYAML{
+				Name:             machine.Name,
+				Type:             machine.Type,
+				VmId:             machine.VmId,
+				OsTemplate:       machine.OsTemplate,
+				ISO:              machine.ISO,
+				IPAddress:        machine.IPAddress,
+				CPUs:             machine.CPUs,
+				Memory:           machine.Memory,
+				DiskSize:         machine.DiskSize,
+				SwapSize:         machine.SwapSize,
+				Tags:             machine.Tags,
+				StartOnBoot:      machine.StartOnBoot,
+				StorageBackend:   machine.StorageBackend,
+				TemplateBackend:  machine.TemplateBackend,
+				NetworkBridge:    machine.NetworkBridge,
+				NetworkInterface: machine.NetworkInterface,
+				DefaultGateway:   machine.DefaultGateway,
+				SshPublicKeys:    machinePubKeys,
+			}
+
+			if machine.Type == "lxc" {
+				nodeConfig.LXCs.Machines = append(nodeConfig.LXCs.Machines, machineConfig)
+			} else if machine.Type == "vm" {
+				nodeConfig.VMs.Machines = append(nodeConfig.VMs.Machines, machineConfig)
+			}
+		}
+
+		yamlConfig.Hosts[hostConfig.TargetNode] = nodeConfig
+	}
+
+	return yamlConfig
 }
 
 func PropagateDefaults(cfg *config.HostConfigYAML) *config.HostConfigYAML {
