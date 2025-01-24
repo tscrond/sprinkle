@@ -81,31 +81,85 @@ This command deletes the VMs or LXCs that were previously created using `sprinkl
 The configuration file is a YAML file where you define your infrastructure. Here’s an example:
 
 ```yaml
-vms:
-  - id: 100
-    name: "web-server"
-    cores: 2
-    memory: 4096
-    disk: 20
-    net:
-      bridge: "vmbr0"
-      ip: "dhcp"
-      firewall: true
-    storage: "local-lvm"
-    template: "debian-11"
+hosts:
+  genesis:
+    api-url: "192.168.1.102:8006"
+    target-node: "genesis"
+    lxc:
+      default:
+        start-on-boot: false
+        storage-backend: local-lvm
+        template-backend: local
+        default-gateway: "192.168.1.1"
+        network-bridge: "vmbr0"
+        network-interface: "eth0"
+      machines:
+        - name: "firstlxc123"
+          vmid: 112
+          os-template: "debian-11-standard_11.7-1_amd64.tar.zst"
+          ssh-public-keys:
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE tomasz.skrond@boar.network"
+            - path: "/Users/tskr/.ssh/genesis.pub"
+          ip-address: "192.168.1.30/24"
+          cpus: 4
+          memory: 2048
+          disk-size: 100
+          swap-size: 20
+          tags: "asdf;fdsa;fds"
+    vm:
+      default:
+        start-on-boot: false
+        storage-backend: local-lvm
+        template-backend: local
+        default-gateway: "192.168.1.1"
+        network-bridge: "vmbr0"
+        network-interface: "eth0"
+      machines:
+        - name: "firstvm"
+          vmid: 114
+          iso: "ubuntu-24.04.1-live-server-amd64.iso"
+          ssh-public-keys:
+            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+            - path: "/Users/user/.ssh/genesis.pub"
+          cpus: 4
+          memory: 2048
+          disk-size: 100
+          swap-size: 0
+          tags: "asdf;fdsa;oooooooo"
 
-lxcs:
-  - id: 200
-    name: "app-container"
-    cores: 1
-    memory: 1024
-    disk: 10
-    net:
-      bridge: "vmbr0"
-      ip: "192.168.1.100"
-      firewall: false
-    storage: "local-lvm"
-    template: "ubuntu-20.04"
+
+  hyperbook:
+    api-url: "192.168.1.100:8006"
+    target-node: "hyperbook"
+    lxc:
+      default:
+        start-on-boot: false
+        storage-backend: local-lvm
+        template-backend: local
+        default-gateway: "192.168.1.1"
+        network-bridge: "vmbr0"
+        network-interface: "eth0"
+      machines:
+      vm:
+        default:
+          start-on-boot: false
+          storage-backend: local-lvm
+          template-backend: local
+          default-gateway: "192.168.1.1"
+          network-bridge: "vmbr0"
+          network-interface: "eth0"
+        machines:
+          - name: "firstvm"
+            vmid: 11443
+            iso: "ubuntu-24.04.1-live-server-amd64.iso"
+            ssh-public-keys:
+              - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5aaaafIC48nEoa2rRazXTxZ4anL+6CL2bGXTo6w6XcDpmcd3pE key@tomo"
+              - path: "/Users/user/.ssh/genesis.pub"
+            cpus: 4
+            memory: 2048
+            disk-size: 100
+            swap-size: 0
+            tags: "ffasdfqwer1111234;fdsa;fds"
 ```
 
 In this example, the configuration defines both a VM (`web-server`) and an LXC (`app-container`) with specific settings, including CPU cores, memory, disk size, and network configurations.
