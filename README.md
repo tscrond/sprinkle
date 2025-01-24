@@ -1,3 +1,5 @@
+> [!WARNING]
+> Code under heavy development - a lot of features not ready ;)
 
 # Sprinkle - A Proxmox VM/LXC Management Tool
 
