@@ -80,7 +80,7 @@ func (repo *ResourceRepository) InsertHostConfigs(hostConfigs []HostConfig) erro
 					sshkey.CreatedAt = time.Time{}
 					sshkey.UpdatedAt = time.Time{}
 
-					if err := repo.InsertOrModifyStruct(&sshkey, &SSHKey{VmId: machine.VmId, Key: sshkey.Key, Path: sshkey.Path}); err != nil {
+					if err := repo.InsertOrModifyStruct(&sshkey, &SSHKey{VmId: machine.VmId, Key: sshkey.Key}); err != nil {
 						return err
 					}
 				}

@@ -30,6 +30,7 @@ type MachineConfig struct {
 	DefaultGateway   string
 	TargetNode       string   `gorm:"index"` // Foreign Key to HostConfig
 	SSHPublicKeys    []SSHKey `gorm:"foreignKey:VmId;constraint:OnDelete:CASCADE"`
+	UsingCloudInit   bool
 }
 
 type SSHKey struct {
@@ -37,7 +38,6 @@ type SSHKey struct {
 	ID   uint    `gorm:"primaryKey"`
 	VmId int     `gorm:"index"`
 	Key  *string `gorm:"type:text"`
-	Path *string `gorm:"type:text"`
 }
 
 type Credentials struct {

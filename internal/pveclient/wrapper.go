@@ -1,8 +1,9 @@
-package http
+package pveclient
 
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,18 +11,20 @@ import (
 	"github.com/tscrond/sprinkle/internal/db"
 )
 
-type PVERequest struct {
+type PVEClient struct {
 	Credentials *db.Credentials
 	*http.Client
 	*http.Request
 }
 
-func NewPVERequest(creds *db.Credentials) *PVERequest {
-	return &PVERequest{Credentials: creds}
+func NewPVEClient(creds *db.Credentials, client *http.Client) *PVEClient {
+	return &PVEClient{Credentials: creds, Client: client}
 }
 
-func (r *PVERequest) New(requestMethod, requestPath string, requestBody io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(requestMethod, requestPath, requestBody)
+func (r *PVEClient) NewRequest(requestMethod, requestPath string, requestBody io.Reader) (*http.Response, error) {
+	fullApiUrl := fmt.Sprintf("https://%s%s", r.Credentials.ApiUrl, requestPath)
+
+	req, err := http.NewRequest(requestMethod, fullApiUrl, requestBody)
 	if err != nil {
 		log.Printf("Failed to create HTTP request: %v", err)
 		return nil, err
@@ -34,7 +37,7 @@ func (r *PVERequest) New(requestMethod, requestPath string, requestBody io.Reade
 
 	transport, ok := r.Client.Transport.(*http.Transport)
 	if !ok || transport == nil {
-		log.Println("Initializing client transport...")
+		// log.Println("Initializing client transport...")
 		transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}

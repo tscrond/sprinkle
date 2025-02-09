@@ -24,12 +24,6 @@ func NewAuthService(db *db.ResourceRepository) *AuthService {
 	}
 }
 
-// authenticated request to proxmox api to target node
-// func (a *AuthService) ProxmoxAPIRequest(method, requestPath, targetNode string, requestBody io.Reader) (*http.Response, error) {
-
-//		return nil, nil
-//	}
-
 // return auth creds for target node
 func (a *AuthService) Authenticate(targetNode, apiUrl string) (*db.Credentials, error) {
 	creds, err := a.GetCredentials(targetNode, apiUrl)

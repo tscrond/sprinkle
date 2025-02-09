@@ -9,6 +9,7 @@ import (
 	"github.com/tscrond/sprinkle/internal/configmapper"
 	"github.com/tscrond/sprinkle/internal/db"
 	"github.com/tscrond/sprinkle/internal/provisioner"
+	"github.com/tscrond/sprinkle/internal/state"
 	"github.com/tscrond/sprinkle/pkg/lib"
 )
 
@@ -45,10 +46,12 @@ var ApplyConfig = &cobra.Command{
 			}
 			// fmt.Printf("%+v", creds)
 			lib.PrettyPrintStruct(creds)
-
-			provisioner := provisioner.NewProxmoxProvisioner(authService, configManager)
+			
+			pveProvisioner := provisioner.NewProxmoxProvisioner(creds)
+			
+			stateEngine := state.NewStateEngine(authService, configManager, pveProvisioner)
 			// provisioner.CreateResources()
-			if err := provisioner.ApplyDiff(hostName); err != nil {
+			if err := stateEngine.ApplyDiff(hostName); err != nil {
 				log.Fatalln(err)
 			}
 		}

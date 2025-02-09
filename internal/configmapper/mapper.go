@@ -30,7 +30,6 @@ func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error)
 				machinePubKeys = append(machinePubKeys, db.SSHKey{
 					VmId: machine.VmId,
 					Key:  &pubkey.Key,
-					Path: &pubkey.Path,
 				})
 			}
 
@@ -53,6 +52,7 @@ func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error)
 				NetworkInterface: machine.NetworkInterface,
 				DefaultGateway:   machine.DefaultGateway,
 				SSHPublicKeys:    machinePubKeys,
+				UsingCloudInit:   machine.UsingCloudInit,
 			})
 			dbHostConfigs = append(dbHostConfigs, hostconfig)
 		}
@@ -63,7 +63,6 @@ func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error)
 				machinePubKeys = append(machinePubKeys, db.SSHKey{
 					VmId: machine.VmId,
 					Key:  &pubkey.Key,
-					Path: &pubkey.Path,
 				})
 			}
 
@@ -86,6 +85,7 @@ func ConvertConfigToDBModel(cfg *config.HostConfigYAML) ([]db.HostConfig, error)
 				NetworkInterface: machine.NetworkInterface,
 				DefaultGateway:   machine.DefaultGateway,
 				SSHPublicKeys:    machinePubKeys,
+				UsingCloudInit:   machine.UsingCloudInit,
 			})
 			dbHostConfigs = append(dbHostConfigs, hostconfig)
 		}
@@ -131,8 +131,7 @@ func ConvertDBModelToConfig(dbModels []db.HostConfig) *config.HostConfigYAML {
 			machinePubKeys := []config.SSHKey{}
 			for _, pubkey := range machine.SSHPublicKeys {
 				machinePubKeys = append(machinePubKeys, config.SSHKey{
-					Key:  *pubkey.Key,
-					Path: *pubkey.Path,
+					Key: *pubkey.Key,
 				})
 			}
 
@@ -155,6 +154,7 @@ func ConvertDBModelToConfig(dbModels []db.HostConfig) *config.HostConfigYAML {
 				NetworkInterface: machine.NetworkInterface,
 				DefaultGateway:   machine.DefaultGateway,
 				SshPublicKeys:    machinePubKeys,
+				UsingCloudInit:   machine.UsingCloudInit,
 			}
 
 			if machine.Type == "lxc" {

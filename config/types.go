@@ -34,6 +34,7 @@ type MachineConfigYAML struct {
 	NetworkInterface string   `mapstructure:"network-interface,omitempty"`
 	DefaultGateway   string   `mapstructure:"default-gateway,omitempty"`
 	SshPublicKeys    []SSHKey `mapstructure:"ssh-public-keys"`
+	UsingCloudInit   bool     `mapstructure:"cloudinit"`
 }
 
 type SSHKey struct {
